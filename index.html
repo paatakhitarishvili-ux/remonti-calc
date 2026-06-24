@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>სარემონტო კალკულატორი</title>
+<meta name="description" content="სარემონტო ხარჯების კალკულატორი">
+<meta name="theme-color" content="#E8622A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="რემ-კალკ">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=BPG+Arial+2009&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #1A1F2E;
+    --bg2: #242938;
+    --bg3: #2D3347;
+    --accent: #E8622A;
+    --accent2: #F0894A;
+    --green: #3DBE7A;
+    --red: #E05252;
+    --text: #F0EDE8;
+    --text2: #A8B0C8;
+    --border: #3A4060;
+    --card: #2A3045;
+    --radius: 10px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'BPG Arial 2009', 'Segoe UI', sans-serif; font-size:14px; min-height:100vh; }
+
+  /* ========== NAV ========== */
+  .nav { display:flex; align-items:center; background:var(--bg2); border-bottom:2px solid var(--accent); padding:0 24px; height:56px; gap:4px; }
+  .nav-logo { font-size:18px; font-weight:700; color:var(--accent); margin-right:24px; letter-spacing:1px; display:flex; align-items:center; gap:8px; }
+  .nav-logo span { font-size:22px; }
+  .tab-btn { padding:8px 20px; border:none; background:transparent; color:var(--text2); font-family:inherit; font-size:13px; cursor:pointer; border-radius:6px; transition:.2s; }
+  .tab-btn:hover { background:var(--bg3); color:var(--text); }
+  .tab-btn.active { background:var(--accent); color:#fff; font-weight:600; }
+
+  /* ========== PAGES ========== */
+  .page { display:none; padding:24px; }
+  .page.active { display:block; }
+
+  /* ========== DASHBOARD ========== */
+  .dash-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+  .dash-header h2 { font-size:20px; color:var(--text); }
+  .btn { padding:9px 18px; border:none; border-radius:var(--radius); font-family:inherit; font-size:13px; cursor:pointer; transition:.2s; font-weight:600; }
+  .btn-accent { background:var(--accent); color:#fff; }
+  .btn-accent:hover { background:var(--accent2); }
+  .btn-outline { background:transparent; color:var(--accent); border:1.5px solid var(--accent); }
+  .btn-outline:hover { background:var(--accent); color:#fff; }
+  .btn-sm { padding:5px 12px; font-size:12px; }
+  .btn-green { background:var(--green); color:#fff; }
+  .btn-green:hover { opacity:.85; }
+  .btn-red { background:var(--red); color:#fff; }
+  .btn-red:hover { opacity:.85; }
+
+  /* Project meta */
+  .project-meta { background:var(--card); border-radius:var(--radius); padding:20px; margin-bottom:20px; border:1px solid var(--border); }
+  .project-meta h3 { font-size:15px; color:var(--accent); margin-bottom:14px; }
+  .meta-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; }
+  .field { display:flex; flex-direction:column; gap:5px; }
+  .field label { font-size:12px; color:var(--text2); }
+  .field input, .field select { background:var(--bg3); border:1.5px solid var(--border); color:var(--text); padding:7px 10px; border-radius:7px; font-family:inherit; font-size:13px; outline:none; transition:.2s; }
+  .field input:focus, .field select:focus { border-color:var(--accent); }
+
+  /* Summary bar */
+  .summary-bar { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-bottom:20px; }
+  .summary-card { background:var(--card); border-radius:var(--radius); padding:14px 18px; border:1px solid var(--border); }
+  .summary-card .s-label { font-size:11px; color:var(--text2); margin-bottom:4px; }
+  .summary-card .s-val { font-size:22px; font-weight:700; color:var(--accent); }
+  .summary-card .s-val.green { color:var(--green); }
+
+  /* Rooms */
+  .rooms-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .rooms-header h3 { font-size:15px; }
+  .room-block { background:var(--card); border-radius:var(--radius); border:1px solid var(--border); margin-bottom:16px; overflow:hidden; }
+  .room-title-bar { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg3); border-bottom:1px solid var(--border); }
+  .room-title-left { display:flex; align-items:center; gap:10px; }
+  .room-icon { font-size:18px; }
+  .room-name-input { background:transparent; border:none; color:var(--text); font-family:inherit; font-size:14px; font-weight:600; outline:none; width:160px; }
+  .room-sqm { display:flex; align-items:center; gap:6px; color:var(--text2); font-size:13px; }
+  .room-sqm input { background:var(--bg); border:1.5px solid var(--border); color:var(--text); padding:4px 8px; border-radius:6px; font-family:inherit; font-size:13px; width:70px; outline:none; text-align:center; }
+  .room-sqm input:focus { border-color:var(--accent); }
+  .room-total { font-weight:700; color:var(--accent); font-size:15px; margin-left:12px; }
+
+  /* Categories inside room */
+  .room-cats { padding:14px 16px; }
+  .cat-section { margin-bottom:14px; }
+  .cat-section-title { font-size:12px; color:var(--accent2); font-weight:700; letter-spacing:.5px; text-transform:uppercase; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid var(--border); }
+  .work-row { display:grid; grid-template-columns:28px 1fr 90px 90px 90px 28px; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid #ffffff08; }
+  .work-row:last-child { border-bottom:none; }
+  .work-toggle { width:18px; height:18px; border-radius:4px; border:1.5px solid var(--border); background:var(--bg3); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:.2s; }
+  .work-toggle.checked { background:var(--accent); border-color:var(--accent); }
+  .work-toggle .check-icon { color:#fff; font-size:11px; display:none; }
+  .work-toggle.checked .check-icon { display:block; }
+  .work-name { font-size:13px; color:var(--text); }
+  .work-name.disabled { color:var(--text2); text-decoration:line-through; opacity:.5; }
+  .work-input { background:var(--bg3); border:1.5px solid var(--border); color:var(--text); padding:4px 8px; border-radius:6px; font-family:inherit; font-size:12px; width:100%; outline:none; text-align:right; }
+  .work-input:focus { border-color:var(--accent); }
+  .work-input:disabled { opacity:.35; cursor:not-allowed; }
+  .work-input.override { border-color:var(--accent2); }
+  .work-unit { font-size:11px; color:var(--text2); text-align:center; }
+  .work-total { font-size:13px; font-weight:600; color:var(--text); text-align:right; }
+  .work-total.disabled { opacity:.3; }
+  .edit-btn { background:none; border:none; color:var(--text2); cursor:pointer; font-size:14px; padding:2px; transition:.2s; }
+  .edit-btn:hover { color:var(--accent2); }
+  .col-header { display:grid; grid-template-columns:28px 1fr 90px 90px 90px 28px; gap:8px; padding:4px 0 8px; }
+  .col-h { font-size:11px; color:var(--text2); text-align:right; }
+  .col-h:nth-child(2) { text-align:left; }
+
+  /* ========== TEMPLATES ========== */
+  .tpl-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:20px; }
+  .tpl-card { background:var(--card); border-radius:var(--radius); border:1px solid var(--border); padding:20px; }
+  .tpl-card h3 { color:var(--accent); font-size:14px; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .tpl-row { display:grid; grid-template-columns:1fr 90px 90px; gap:8px; align-items:center; padding:4px 0; border-bottom:1px solid #ffffff08; }
+  .tpl-row:last-child { border-bottom:none; }
+  .tpl-name { font-size:12px; color:var(--text); }
+  .tpl-inp { background:var(--bg3); border:1.5px solid var(--border); color:var(--text); padding:4px 8px; border-radius:6px; font-family:inherit; font-size:12px; width:100%; outline:none; text-align:right; }
+  .tpl-inp:focus { border-color:var(--accent); }
+  .tpl-unit { font-size:11px; color:var(--text2); }
+  .tpl-col-h { font-size:11px; color:var(--text2); text-align:right; padding-bottom:6px; }
+  .tpl-col-h:first-child { text-align:left; }
+  .tpl-save-bar { margin-top:14px; display:flex; justify-content:flex-end; }
+
+  /* ========== ARCHIVE ========== */
+  .archive-list { display:flex; flex-direction:column; gap:12px; }
+  .arch-card { background:var(--card); border-radius:var(--radius); border:1px solid var(--border); padding:16px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+  .arch-info h4 { font-size:14px; margin-bottom:4px; }
+  .arch-info p { font-size:12px; color:var(--text2); }
+  .arch-total { font-size:20px; font-weight:700; color:var(--accent); }
+  .arch-actions { display:flex; gap:8px; }
+  .empty-state { text-align:center; color:var(--text2); padding:60px 20px; }
+  .empty-state .e-icon { font-size:48px; margin-bottom:12px; }
+  .empty-state p { font-size:14px; }
+
+  /* Modal */
+  .modal-overlay { display:none; position:fixed; inset:0; background:#000a; z-index:1000; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:28px; width:360px; max-width:95vw; }
+  .modal h3 { margin-bottom:16px; color:var(--accent); }
+  .modal .field { margin-bottom:14px; }
+  .modal-btns { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+
+  /* Toast */
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--green); color:#fff; padding:10px 20px; border-radius:var(--radius); font-size:13px; font-weight:600; z-index:9999; transform:translateY(80px); opacity:0; transition:.3s; }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast.error { background:var(--red); }
+
+  /* Room add menu */
+  .room-menu-item { padding:9px 16px; font-size:13px; cursor:pointer; color:var(--text); transition:.15s; }
+  .room-menu-item:hover { background:var(--bg3); color:var(--accent); }
+  .room-menu-divider { height:1px; background:var(--border); margin:4px 0; }
+
+  /* Avoji rows */
+  .avoji-row { display:grid; grid-template-columns:1fr 120px 100px 28px; gap:8px; align-items:center; padding:6px 0; border-bottom:1px solid #ffffff08; }
+  .avoji-row:last-child { border-bottom:none; }
+  .avoji-name { background:var(--bg3); border:1.5px solid var(--border); color:var(--text); padding:5px 10px; border-radius:6px; font-family:inherit; font-size:13px; outline:none; width:100%; }
+  .avoji-name:focus { border-color:var(--accent); }
+  .avoji-price { background:var(--bg3); border:1.5px solid var(--border); color:var(--text); padding:5px 8px; border-radius:6px; font-family:inherit; font-size:13px; outline:none; text-align:right; width:100%; }
+  .avoji-price:focus { border-color:var(--accent); }
+  .avoji-sum { font-size:13px; font-weight:600; color:var(--text); text-align:right; }
+
+  @media(max-width:600px) {
+    .work-row { grid-template-columns:24px 1fr 75px 75px 75px 24px; }
+    .col-header { grid-template-columns:24px 1fr 75px 75px 75px 24px; }
+    .avoji-row { grid-template-columns:1fr 90px 80px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo"><span>🏗️</span> რემ-კალკ</div>
+  <button class="tab-btn active" onclick="showPage('dashboard')">📊 დეშბორდი</button>
+  <button class="tab-btn" onclick="showPage('templates')">📐 სამუშაო ნორმები</button>
+  <button class="tab-btn" onclick="showPage('archive')">📁 არქივი</button>
+</nav>
+
+<!-- ===== DASHBOARD ===== -->
+<div id="page-dashboard" class="page active">
+  <div class="dash-header">
+    <h2>📋 პროექტი</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-outline btn-sm" onclick="newProject()">+ ახალი პროექტი</button>
+      <button class="btn btn-outline btn-sm" onclick="saveProject()">💾 შენახვა</button>
+      <button class="btn btn-outline btn-sm" onclick="exportPDF()">📄 PDF</button>
+      <button class="btn btn-outline btn-sm" onclick="exportExcel()">📊 Excel</button>
+    </div>
+  </div>
+
+  <!-- Meta -->
+  <div class="project-meta">
+    <h3>🏠 პროექტის პარამეტრები</h3>
+    <div class="meta-grid">
+      <div class="field">
+        <label>პროექტის სახელი</label>
+        <input type="text" id="proj-name" placeholder="მაგ: ვაკე, ბინა #45" value="ახალი პროექტი">
+      </div>
+      <div class="field">
+        <label>ობიექტის ტიპი</label>
+        <select id="proj-type" onchange="onTypeChange()">
+          <option value="bina">ბინა</option>
+          <option value="saxli">სახლი</option>
+          <option value="ofisi">ოფისი</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>კარკასის კატეგორია</label>
+        <select id="proj-karkasi" onchange="onKarkasiChange()">
+          <option value="shavi">შავი კარკასი</option>
+          <option value="tetri">თეთრი კარკასი</option>
+          <option value="mwvane">მწვანე კარკასი</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>მთლიანი ფართი (კვ.მ)</label>
+        <input type="number" id="proj-sqm" value="50" min="1" oninput="recalcAll()">
+      </div>
+      <div class="field">
+        <label>ხარისხის დონე</label>
+        <select id="proj-quality" onchange="onQualityChange()">
+          <option value="economy">ეკონომი</option>
+          <option value="standard" selected>სტანდარტი</option>
+          <option value="premium">პრემიუმი</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>სარეზერვო ბიუჯეტი (%)</label>
+        <input type="number" id="proj-reserve" value="15" min="0" max="50" oninput="recalcAll()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-bar">
+    <div class="summary-card"><div class="s-label">მასალა სულ</div><div class="s-val" id="sum-material">0 ₾</div></div>
+    <div class="summary-card"><div class="s-label">ხელობა სულ</div><div class="s-val" id="sum-labor">0 ₾</div></div>
+    <div class="summary-card"><div class="s-label">სარეზერვო</div><div class="s-val" id="sum-reserve">0 ₾</div></div>
+    <div class="summary-card"><div class="s-label">ჯამი სულ</div><div class="s-val green" id="sum-total">0 ₾</div></div>
+  </div>
+
+  <!-- Rooms -->
+  <div class="rooms-header">
+    <h3>🚪 ოთახები</h3>
+    <div style="position:relative;display:inline-block">
+      <button class="btn btn-outline btn-sm" onclick="toggleRoomMenu(event)">+ ოთახის დამატება ▾</button>
+      <div id="room-menu" style="display:none;position:absolute;right:0;top:110%;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius);z-index:200;min-width:200px;padding:6px 0;box-shadow:0 8px 24px #0006">
+        <div class="room-menu-item" onclick="addRoomType('misaghebi','🛋️','მისაღები',18)">🛋️ მისაღები</div>
+        <div class="room-menu-item" onclick="addRoomType('sadzinebeli','🛏️','საძინებელი',14)">🛏️ საძინებელი</div>
+        <div class="room-menu-item" onclick="addRoomType('samzareulo','🍳','სამზარეულო',12)">🍳 სამზარეულო</div>
+        <div class="room-menu-item" onclick="addRoomType('abazana','🚿','აბაზანა',5)">🚿 აბაზანა</div>
+        <div class="room-menu-item" onclick="addRoomType('sapirfaresho','🚽','საპირფარეშო',3)">🚽 საპირფარეშო</div>
+        <div class="room-menu-item" onclick="addRoomType('derepi','🚪','დერეფანი',6)">🚪 დერეფანი</div>
+        <div class="room-menu-item" onclick="addRoomType('kabineti','💼','კაბინეტი',10)">💼 კაბინეტი</div>
+        <div class="room-menu-item" onclick="addRoomType('sabavshvo','🧸','საბავშვო',12)">🧸 საბავშვო</div>
+        <div class="room-menu-divider"></div>
+        <div class="room-menu-item" onclick="addRoomType('custom','🏠','ახალი ოთახი',10)">➕ სხვა (სახელდება)</div>
+      </div>
+    </div>
+  </div>
+  <div id="rooms-container"></div>
+
+  <!-- AVOJI SECTION -->
+  <div style="margin-top:28px">
+    <div class="rooms-header">
+      <h3>🛋️ ავეჯი და ინტერიერი</h3>
+      <button class="btn btn-outline btn-sm" onclick="addAvoji()">+ კატეგორიის დამატება</button>
+    </div>
+    <div class="room-block">
+      <div class="room-title-bar" style="background:var(--bg3)">
+        <span style="font-weight:600;font-size:13px;color:var(--text2)">კატეგორია</span>
+        <div style="display:flex;gap:16px;align-items:center">
+          <span style="font-size:11px;color:var(--text2);width:120px;text-align:right">ღირებულება ₾</span>
+          <span style="font-size:11px;color:var(--text2);width:100px;text-align:right">სულ ₾</span>
+          <span style="width:28px"></span>
+        </div>
+      </div>
+      <div id="avoji-container" style="padding:10px 16px"></div>
+      <div style="padding:10px 16px 14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <span style="color:var(--text2);font-size:12px">ავეჯის ჯამი</span>
+        <span id="avoji-total" style="font-weight:700;font-size:16px;color:var(--accent)">0 ₾</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TEMPLATES ===== -->
+<div id="page-templates" class="page">
+  <div class="dash-header">
+    <h2>📐 სამუშაო ნორმები და საბაზო ფასები (₾)</h2>
+    <button class="btn btn-accent btn-sm" onclick="saveTemplates()">💾 შენახვა</button>
+  </div>
+  <div class="tpl-grid" id="tpl-container"></div>
+</div>
+
+<!-- ===== ARCHIVE ===== -->
+<div id="page-archive" class="page">
+  <div class="dash-header">
+    <h2>📁 შენახული პროექტები</h2>
+  </div>
+  <div class="archive-list" id="archive-list"></div>
+</div>
+
+<!-- Modal: new project -->
+<div class="modal-overlay" id="modal-new">
+  <div class="modal">
+    <h3>+ ახალი პროექტი</h3>
+    <div class="field"><label>პროექტის სახელი</label><input id="new-proj-name" type="text" placeholder="მაგ: საბურთალო ბინა"></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal('modal-new')">გაუქმება</button>
+      <button class="btn btn-accent" onclick="confirmNewProject()">შექმნა</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+//  DATA STRUCTURES
+// ============================================================
+
+// Default prices: {id, name, unit, matE/S/P, labE/S/P}
+const DEFAULT_WORKS = {
+  iатаки: [
+    // --- საფუძველი ---
+    {id:'demontaji_i', name:'დემონტაჟი / ძველი საფარის მოხსნა', unit:'მ²', matE:0,  matS:0,  matP:0,   labE:8,  labS:10, labP:12},
+    {id:'stia',        name:'სტიაშკა / ბეტონის ასხმა',           unit:'მ²', matE:10, matS:14, matP:20,  labE:15, labS:20, labP:28},
+    {id:'gatboba',     name:'გათბობის გაყვანილობა (მილები)',      unit:'მ²', matE:35, matS:55, matP:85,  labE:20, labS:30, labP:45},
+    {id:'kanal',       name:'საკანალიზაციო გაყვანილობა',          unit:'წ.', matE:40, matS:65, matP:110, labE:35, labS:55, labP:85},
+    {id:'hidro',       name:'ჰიდროიზოლაცია',                     unit:'მ²', matE:15, matS:25, matP:40,  labE:12, labS:18, labP:26},
+    {id:'thermoizol',  name:'თბოიზოლაცია (პენოფოლი/EPS)',        unit:'მ²', matE:12, matS:20, matP:35,  labE:8,  labS:12, labP:16},
+    {id:'xmaizol',     name:'ხმოვანი იზოლაცია',                  unit:'მ²', matE:18, matS:28, matP:45,  labE:8,  labS:12, labP:16},
+    // --- საფარი ---
+    {id:'laminat',     name:'ლამინატი (საიზოლ. ფენით)',           unit:'მ²', matE:28, matS:45, matP:90,  labE:12, labS:18, labP:25},
+    {id:'parketi',     name:'პარკეტი / ინჟინრული პარკეტი',        unit:'მ²', matE:65, matS:110,matP:220, labE:22, labS:32, labP:50},
+    {id:'methlaxi',    name:'მეთლახი / კერამიკული ფილა',          unit:'მ²', matE:32, matS:55, matP:110, labE:20, labS:28, labP:40},
+    {id:'porcelain',   name:'პორცელანი / გრეს',                   unit:'მ²', matE:55, matS:90, matP:180, labE:22, labS:32, labP:48},
+    {id:'vinyl',       name:'ვინილის საფარი / SPC',               unit:'მ²', matE:30, matS:50, matP:95,  labE:10, labS:15, labP:20},
+    {id:'carpet',      name:'ხალიჩა / სასტუმრო ხალიჩა',           unit:'მ²', matE:25, matS:45, matP:100, labE:8,  labS:12, labP:18},
+    {id:'plinth',      name:'პლინტუსი',                            unit:'გ.მ',matE:5,  matS:9,  matP:18,  labE:3,  labS:5,  labP:8},
+    {id:'pragovi',     name:'გადასვლის ზოლები (პრაგოვი)',          unit:'ც.', matE:8,  matS:14, matP:25,  labE:3,  labS:5,  labP:7},
+  ],
+  kedeli: [
+    // --- გაყვანილობა ---
+    {id:'demontaji_k', name:'დემონტაჟი / ძველი საფარის მოხსნა',  unit:'მ²', matE:0,  matS:0,  matP:0,   labE:6,  labS:8,  labP:10},
+    {id:'tixari',      name:'ტიხრის ამოყვანა (აეროგროს)',         unit:'მ²', matE:25, matS:40, matP:65,  labE:20, labS:30, labP:45},
+    {id:'elek',        name:'ელექტრო გაყვანილობა (მავთული+მილი)', unit:'მ²', matE:22, matS:35, matP:55,  labE:18, labS:26, labP:38},
+    {id:'santex',      name:'სანტექნიკის გაყვანილობა',             unit:'წ.', matE:55, matS:85, matP:160, labE:45, labS:65, labP:110},
+    {id:'shtepsel',    name:'შტეფსელი / ჩამრთველი (მონტაჟი)',     unit:'ც.', matE:12, matS:20, matP:40,  labE:8,  labS:12, labP:18},
+    {id:'shitki',      name:'განაწილების შიტი / ელ. პანელი',      unit:'ც.', matE:80, matS:150,matP:300, labE:50, labS:80, labP:130},
+    // --- კედლის დამუშავება ---
+    {id:'lesva_k',     name:'კედლის გალესვა (ცემენტ-ქვიშა)',      unit:'მ²', matE:9,  matS:14, matP:20,  labE:14, labS:20, labP:28},
+    {id:'shpakli_k',   name:'კედლის გაშპაკვლა (2 ფენა)',          unit:'მ²', matE:6,  matS:10, matP:15,  labE:9,  labS:14, labP:20},
+    {id:'gruntovka',   name:'გრუნტი / პრაიმერი',                  unit:'მ²', matE:3,  matS:5,  matP:8,   labE:2,  labS:3,  labP:4},
+    {id:'gipso',       name:'გიფსოკარდონი (ჩარჩოთი)',              unit:'მ²', matE:14, matS:22, matP:35,  labE:18, labS:26, labP:38},
+    {id:'arki',        name:'თაღები / ფიგურული GKL',              unit:'ც.', matE:40, matS:70, matP:130, labE:50, labS:80, labP:130},
+    // --- კედლის საფარი ---
+    {id:'ghebva_k',    name:'შეღებვა (2 ფენა)',                    unit:'მ²', matE:7,  matS:12, matP:22,  labE:5,  labS:9,  labP:14},
+    {id:'shpaleri',    name:'შპალერი (ჩვეულებრივი)',               unit:'მ²', matE:12, matS:22, matP:50,  labE:6,  labS:10, labP:16},
+    {id:'shpaleri_fl', name:'შპალერი (ფლიზელინი)',                 unit:'მ²', matE:20, matS:38, matP:80,  labE:7,  labS:12, labP:18},
+    {id:'kafeli_k',    name:'კაფელი / კერამიკული ფილა',           unit:'მ²', matE:35, matS:58, matP:120, labE:22, labS:32, labP:48},
+    {id:'dekor_panel', name:'დეკორატიული პანელი / ვაგონკა',        unit:'მ²', matE:22, matS:38, matP:75,  labE:12, labS:18, labP:28},
+    {id:'fila_mozaik', name:'მოზაიკა / დეკორატიული ფილა',          unit:'მ²', matE:60, matS:110,matP:220, labE:28, labS:42, labP:65},
+    // --- კარ-ფანჯარა ---
+    {id:'kari',        name:'შიდა კარის მონტაჟი (კარ-ჩარჩოთი)',   unit:'ც.', matE:250,matS:450,matP:900, labE:60, labS:90, labP:130},
+    {id:'fanjara',     name:'ფანჯრის მონტაჟი / შეგება',            unit:'ც.', matE:350,matS:600,matP:1200,labE:80, labS:120,labP:180},
+    {id:'moajiri',     name:'მოაჯირი / სარელინგო სისტემა',         unit:'გ.მ',matE:80, matS:150,matP:350, labE:30, labS:50, labP:80},
+  ],
+  cheri: [
+    // --- ჭერის დამუშავება ---
+    {id:'demontaji_ch',name:'დემონტაჟი / ძველი საფარის მოხსნა',  unit:'მ²', matE:0,  matS:0,  matP:0,   labE:5,  labS:7,  labP:9},
+    {id:'lesva_ch',    name:'ჭერის გალესვა',                       unit:'მ²', matE:9,  matS:14, matP:20,  labE:14, labS:20, labP:28},
+    {id:'shpakli_ch',  name:'ჭერის გაშპაკვლა (2 ფენა)',           unit:'მ²', matE:6,  matS:10, matP:15,  labE:9,  labS:14, labP:20},
+    {id:'grunt_ch',    name:'გრუნტი / პრაიმერი',                   unit:'მ²', matE:3,  matS:5,  matP:8,   labE:2,  labS:3,  labP:4},
+    // --- ჭერის საფარი ---
+    {id:'ghebva_ch',   name:'შეღებვა (2 ფენა, გლუვი ჭერი)',        unit:'მ²', matE:7,  matS:12, matP:22,  labE:6,  labS:10, labP:15},
+    {id:'gipso_ch',    name:'გიფსოკარდონი (ჩარჩოთი)',              unit:'მ²', matE:14, matS:22, matP:35,  labE:18, labS:28, labP:42},
+    {id:'gipso_2level',name:'ორდონიანი GKL ჭერი',                  unit:'მ²', matE:18, matS:30, matP:50,  labE:25, labS:38, labP:58},
+    {id:'shekid',      name:'შეკიდული ჭერი (ალუმ. კარკასი)',       unit:'მ²', matE:22, matS:36, matP:62,  labE:20, labS:30, labP:46},
+    {id:'gasatani',    name:'გასაჭიმი ჭერი (PVC)',                  unit:'მ²', matE:28, matS:42, matP:75,  labE:22, labS:33, labP:50},
+    {id:'gasatani_pr', name:'გასაჭიმი ჭერი (ფოტობეჭდვით)',         unit:'მ²', matE:45, matS:70, matP:130, labE:22, labS:33, labP:50},
+    {id:'3d_ch',       name:'3D / ბეჭდური ჭერი',                   unit:'მ²', matE:55, matS:90, matP:170, labE:25, labS:38, labP:58},
+    // --- ელექტრო ჭერზე ---
+    {id:'elek_ch',     name:'ელექტრო გაყვანილობა (ჭერი)',           unit:'მ²', matE:15, matS:24, matP:38,  labE:12, labS:18, labP:28},
+    {id:'spot_ch',     name:'სპოტ / ჩამჭრელი სანათის მონტაჟი',    unit:'ც.', matE:15, matS:28, matP:60,  labE:5,  labS:8,  labP:12},
+    {id:'lenta_ch',    name:'LED ლენტა (კარნიზი/ნიშა)',             unit:'გ.მ',matE:8,  matS:15, matP:30,  labE:4,  labS:6,  labP:10},
+    {id:'luster',      name:'ლუსტრა / ჭაღის მონტაჟი',              unit:'ც.', matE:0,  matS:0,  matP:0,   labE:15, labS:22, labP:35},
+  ],
+};
+
+const CAT_LABELS = {
+  iатаки: '🟫 იატაკი',
+  kedeli:  '🧱 კედელი',
+  cheri:   '⬜ ჭერი',
+};
+
+// Karkasi rules: which work IDs are disabled for each karkasi type
+// shavi = everything enabled, tetri = stia/gatboba/hidro disabled, mwvane = stia/gatboba/hidro/lesva_k/lesva_ch/shpakli_k/shpakli_ch disabled
+const KARKASI_DISABLED = {
+  // შავი: ახალი მშენებლობა — დემონტაჟი არ სჭირდება
+  shavi:  ['demontaji_i','demontaji_k','demontaji_ch'],
+  // თეთრი: სტიაშკა, გათბობა, კანალიზაცია, ჰიდრო, ელ, სანტექ — უკვე გაკეთებულია
+  tetri:  ['stia','gatboba','kanal','hidro','elek','santex','shitki','elek_ch',
+           'demontaji_i','demontaji_k','demontaji_ch'],
+  // მწვანე: ზემოთ + ლესვა/შპაკლი/გრუნტი — ყველაფერი უკვე გათეთრებულია
+  mwvane: ['stia','gatboba','kanal','hidro','thermoizol','xmaizol','elek','santex','shitki',
+           'lesva_k','shpakli_k','gruntovka','lesva_ch','shpakli_ch','grunt_ch',
+           'elek_ch','demontaji_i','demontaji_k','demontaji_ch','tixari'],
+};
+
+const DEFAULT_ROOMS = [
+  {id:'r1', name:'მისაღები', icon:'🛋️', sqm:20},
+];
+
+// ============================================================
+//  STATE
+// ============================================================
+let state = {
+  project: {name:'ახალი პროექტი', type:'bina', karkasi:'shavi', sqm:50, quality:'standard', reserve:15},
+  rooms: [],
+  overrides: {},
+  templates: null,
+  avoji: [],
+};
+
+const TEMPLATE_VERSION = 'v4';
+
+function buildDefaultTemplates() {
+  const t = {};
+  for (const [cat, works] of Object.entries(DEFAULT_WORKS)) {
+    t[cat] = {};
+    for (const w of works) {
+      t[cat][w.id] = {
+        mat_economy: w.matE, mat_standard: w.matS, mat_premium: w.matP,
+        lab_economy: w.labE, lab_standard: w.labS, lab_premium: w.labP,
+      };
+    }
+  }
+  return t;
+}
+
+const storedTplRaw = localStorage.getItem('remonti_templates');
+const storedTplVer = localStorage.getItem('remonti_tpl_version');
+if (!storedTplRaw || storedTplVer !== TEMPLATE_VERSION) {
+  state.templates = buildDefaultTemplates();
+  localStorage.setItem('remonti_templates', JSON.stringify(state.templates));
+  localStorage.setItem('remonti_tpl_version', TEMPLATE_VERSION);
+} else {
+  state.templates = JSON.parse(storedTplRaw);
+  // merge in any new work IDs not yet in stored templates
+  for (const [cat, works] of Object.entries(DEFAULT_WORKS)) {
+    if (!state.templates[cat]) state.templates[cat] = {};
+    for (const w of works) {
+      if (!state.templates[cat][w.id]) {
+        state.templates[cat][w.id] = {
+          mat_economy: w.matE, mat_standard: w.matS, mat_premium: w.matP,
+          lab_economy: w.labE, lab_standard: w.labS, lab_premium: w.labP,
+        };
+      }
+    }
+  }
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+function init() {
+  state.rooms = DEFAULT_ROOMS.map(r => ({...r, id: r.id}));
+  state.overrides = {};
+  state.avoji = DEFAULT_AVOJI.map(a=>({...a}));
+  syncFromDOM_project();
+  renderRooms();
+  initAvoji();
+  renderTemplates();
+  renderArchive();
+  recalcAll();
+}
+
+// ============================================================
+//  PROJECT META
+// ============================================================
+function syncFromDOM_project() {
+  state.project.name    = document.getElementById('proj-name').value;
+  state.project.type    = document.getElementById('proj-type').value;
+  state.project.karkasi = document.getElementById('proj-karkasi').value;
+  state.project.sqm     = parseFloat(document.getElementById('proj-sqm').value)||0;
+  state.project.quality = document.getElementById('proj-quality').value;
+  state.project.reserve = parseFloat(document.getElementById('proj-reserve').value)||0;
+}
+
+function onTypeChange() { syncFromDOM_project(); recalcAll(); }
+function onKarkasiChange() { syncFromDOM_project(); renderRooms(); recalcAll(); }
+function onQualityChange() { syncFromDOM_project(); recalcAll(); }
+
+// ============================================================
+//  PRICE RESOLUTION
+// ============================================================
+function getPrice(cat, workId, type) {
+  // type = 'mat' or 'lab'
+  const q = state.project.quality;
+  const key = type + '_' + q;
+  // Use template price
+  return (state.templates[cat] && state.templates[cat][workId] && state.templates[cat][workId][key]) || 0;
+}
+
+function isWorkDisabled(workId) {
+  return KARKASI_DISABLED[state.project.karkasi].includes(workId);
+}
+
+function getOverride(roomId, workId) {
+  return (state.overrides[roomId] && state.overrides[roomId][workId]) || {};
+}
+
+function isWorkEnabled(roomId, workId) {
+  const ov = getOverride(roomId, workId);
+  if (ov.enabled !== undefined) return ov.enabled;
+  return !isWorkDisabled(workId);
+}
+
+// ============================================================
+//  RENDER ROOMS
+// ============================================================
+function renderRooms() {
+  const container = document.getElementById('rooms-container');
+  container.innerHTML = '';
+  for (const room of state.rooms) {
+    container.appendChild(buildRoomBlock(room));
+  }
+}
+
+function buildRoomBlock(room) {
+  const div = document.createElement('div');
+  div.className = 'room-block';
+  div.id = 'room-' + room.id;
+
+  // Title bar
+  const titleBar = document.createElement('div');
+  titleBar.className = 'room-title-bar';
+
+  const left = document.createElement('div');
+  left.className = 'room-title-left';
+  left.innerHTML = `<span class="room-icon">${room.icon}</span>
+    <input class="room-name-input" value="${room.name}" onchange="renameRoom('${room.id}',this.value)">`;
+
+  const right = document.createElement('div');
+  right.style.cssText = 'display:flex;align-items:center;gap:12px;';
+  right.innerHTML = `<span class="room-sqm">
+      <span>კვ.მ:</span>
+      <input type="number" value="${room.sqm}" min="1" onchange="setRoomSqm('${room.id}',this.value)" oninput="setRoomSqm('${room.id}',this.value)">
+    </span>
+    <span class="room-total" id="room-total-${room.id}">0 ₾</span>
+    <button class="btn btn-sm btn-red" onclick="removeRoom('${room.id}')">✕</button>`;
+
+  titleBar.appendChild(left);
+  titleBar.appendChild(right);
+  div.appendChild(titleBar);
+
+  // Cats
+  const catsDiv = document.createElement('div');
+  catsDiv.className = 'room-cats';
+
+  for (const [cat, works] of Object.entries(DEFAULT_WORKS)) {
+    const section = document.createElement('div');
+    section.className = 'cat-section';
+
+    const title = document.createElement('div');
+    title.className = 'cat-section-title';
+    title.textContent = CAT_LABELS[cat];
+    section.appendChild(title);
+
+    // Column headers
+    const hdr = document.createElement('div');
+    hdr.className = 'col-header';
+    hdr.innerHTML = `<div></div><div class="col-h" style="text-align:left">სამუშაო</div>
+      <div class="col-h">მასალა ₾</div><div class="col-h">ხელობა ₾</div>
+      <div class="col-h">ჯამი ₾</div><div></div>`;
+    section.appendChild(hdr);
+
+    for (const w of works) {
+      section.appendChild(buildWorkRow(room, cat, w));
+    }
+    catsDiv.appendChild(section);
+  }
+  div.appendChild(catsDiv);
+  return div;
+}
+
+function buildWorkRow(room, cat, w) {
+  const enabled = isWorkEnabled(room.id, w.id);
+  const karkasiOff = isWorkDisabled(w.id);
+  const ov = getOverride(room.id, w.id);
+
+  const matPrice = (ov.mat !== undefined) ? ov.mat : getPrice(cat, w.id, 'mat');
+  const labPrice = (ov.lab !== undefined) ? ov.lab : getPrice(cat, w.id, 'lab');
+  const matHasOv = ov.mat !== undefined;
+  const labHasOv = ov.lab !== undefined;
+
+  const row = document.createElement('div');
+  row.className = 'work-row';
+  row.id = `wr-${room.id}-${w.id}`;
+
+  // Toggle
+  const toggle = document.createElement('div');
+  toggle.className = `work-toggle ${enabled ? 'checked' : ''}`;
+  toggle.innerHTML = `<span class="check-icon">✓</span>`;
+  toggle.title = karkasiOff && enabled ? 'კარკასით გამორთული (ხელით ჩართული)' : '';
+  toggle.onclick = () => toggleWork(room.id, w.id);
+  row.appendChild(toggle);
+
+  // Name
+  const name = document.createElement('div');
+  name.className = `work-name ${enabled ? '' : 'disabled'}`;
+  name.innerHTML = `${w.name} <span style="font-size:10px;color:var(--text2)">${w.unit}</span>`;
+  if (karkasiOff && !ov.enabled) {
+    name.title = 'გამორთულია კარკასის გამო';
+  }
+  row.appendChild(name);
+
+  // Mat input
+  const matInp = document.createElement('input');
+  matInp.type = 'number';
+  matInp.className = `work-input ${matHasOv ? 'override' : ''}`;
+  matInp.value = matPrice;
+  matInp.disabled = !enabled;
+  matInp.title = matHasOv ? 'შეცვლილია (ტემპლეიტისგან განსხვავდება)' : '';
+  matInp.onchange = (e) => setWorkOverride(room.id, cat, w.id, 'mat', parseFloat(e.target.value)||0);
+  matInp.oninput = (e) => setWorkOverride(room.id, cat, w.id, 'mat', parseFloat(e.target.value)||0);
+  row.appendChild(matInp);
+
+  // Lab input
+  const labInp = document.createElement('input');
+  labInp.type = 'number';
+  labInp.className = `work-input ${labHasOv ? 'override' : ''}`;
+  labInp.value = labPrice;
+  labInp.disabled = !enabled;
+  labInp.title = labHasOv ? 'შეცვლილია' : '';
+  labInp.onchange = (e) => setWorkOverride(room.id, cat, w.id, 'lab', parseFloat(e.target.value)||0);
+  labInp.oninput = (e) => setWorkOverride(room.id, cat, w.id, 'lab', parseFloat(e.target.value)||0);
+  row.appendChild(labInp);
+
+  // Row total
+  const total = document.createElement('div');
+  total.className = `work-total ${enabled ? '' : 'disabled'}`;
+  total.id = `wt-${room.id}-${w.id}`;
+  row.appendChild(total);
+
+  // Edit/reset btn
+  const editBtn = document.createElement('button');
+  editBtn.className = 'edit-btn';
+  editBtn.innerHTML = (matHasOv || labHasOv) ? '↺' : '✎';
+  editBtn.title = (matHasOv || labHasOv) ? 'ტემპლეიტზე დაბრუნება' : 'ფასის შეცვლა';
+  editBtn.onclick = () => resetWorkOverride(room.id, cat, w.id);
+  row.appendChild(editBtn);
+
+  return row;
+}
+
+// ============================================================
+//  INTERACTIONS
+// ============================================================
+function renameRoom(id, val) {
+  const r = state.rooms.find(r=>r.id===id);
+  if (r) r.name = val;
+}
+
+function setRoomSqm(id, val) {
+  const r = state.rooms.find(r=>r.id===id);
+  if (r) { r.sqm = parseFloat(val)||0; recalcAll(); }
+}
+
+function removeRoom(id) {
+  if (state.rooms.length <= 1) { showToast('მინიმუმ 1 ოთახი საჭიროა', true); return; }
+  state.rooms = state.rooms.filter(r=>r.id!==id);
+  delete state.overrides[id];
+  const el = document.getElementById('room-'+id);
+  if (el) el.remove();
+  recalcAll();
+}
+
+function toggleRoomMenu(e) {
+  e.stopPropagation();
+  const m = document.getElementById('room-menu');
+  m.style.display = m.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', () => {
+  const m = document.getElementById('room-menu');
+  if (m) m.style.display = 'none';
+});
+
+function addRoomType(type, icon, name, sqm) {
+  document.getElementById('room-menu').style.display = 'none';
+  const id = 'r'+Date.now();
+  const room = {id, name, icon, sqm};
+  state.rooms.push(room);
+  const container = document.getElementById('rooms-container');
+  container.appendChild(buildRoomBlock(room));
+  recalcAll();
+}
+
+// legacy kept for confirmNewProject reset
+function addRoom() { addRoomType('custom','🏠','ახალი ოთახი',10); }
+
+// ============================================================
+//  AVOJI (FURNITURE)
+// ============================================================
+const DEFAULT_AVOJI = [
+  {id:'av1', name:'სამზარეულოს ავეჯი', price:0},
+  {id:'av2', name:'საძინებლის ავეჯი',  price:0},
+  {id:'av3', name:'მისაღების ავეჯი',   price:0},
+  {id:'av4', name:'სააბაზანოს ავეჯი',  price:0},
+  {id:'av5', name:'სხვა / ტექნიკა',    price:0},
+];
+
+function initAvoji() {
+  if (!state.avoji) state.avoji = DEFAULT_AVOJI.map(a=>({...a}));
+  renderAvoji();
+}
+
+function renderAvoji() {
+  const c = document.getElementById('avoji-container');
+  if (!c) return;
+  c.innerHTML = '';
+  for (const av of state.avoji) {
+    const row = document.createElement('div');
+    row.className = 'avoji-row';
+    row.id = 'av-row-'+av.id;
+    row.innerHTML = `
+      <input class="avoji-name" value="${av.name}" placeholder="კატეგორია" onchange="updateAvojiName('${av.id}',this.value)">
+      <input class="avoji-price" type="number" value="${av.price||0}" placeholder="0" oninput="updateAvojiPrice('${av.id}',this.value)">
+      <div class="avoji-sum" id="av-sum-${av.id}">${fmt(av.price||0)}</div>
+      <button class="edit-btn" onclick="removeAvoji('${av.id}')" title="წაშლა">✕</button>`;
+    c.appendChild(row);
+  }
+  recalcAvojiTotal();
+}
+
+function updateAvojiName(id, val) {
+  const av = state.avoji.find(a=>a.id===id);
+  if (av) av.name = val;
+}
+
+function updateAvojiPrice(id, val) {
+  const av = state.avoji.find(a=>a.id===id);
+  if (av) { av.price = parseFloat(val)||0; }
+  const s = document.getElementById('av-sum-'+id);
+  if (s) s.textContent = fmt(parseFloat(val)||0);
+  recalcAvojiTotal();
+  recalcSummary();
+}
+
+function removeAvoji(id) {
+  state.avoji = state.avoji.filter(a=>a.id!==id);
+  const el = document.getElementById('av-row-'+id);
+  if (el) el.remove();
+  recalcAvojiTotal();
+  recalcSummary();
+}
+
+function addAvoji() {
+  const id = 'av'+Date.now();
+  state.avoji.push({id, name:'ახალი კატეგორია', price:0});
+  renderAvoji();
+}
+
+function recalcAvojiTotal() {
+  const total = (state.avoji||[]).reduce((s,a)=>s+(a.price||0),0);
+  const el = document.getElementById('avoji-total');
+  if (el) el.textContent = fmt(total);
+  return total;
+}
+
+function toggleWork(roomId, workId) {
+  if (!state.overrides[roomId]) state.overrides[roomId] = {};
+  if (!state.overrides[roomId][workId]) state.overrides[roomId][workId] = {};
+  const cur = isWorkEnabled(roomId, workId);
+  state.overrides[roomId][workId].enabled = !cur;
+  // Re-render just this row
+  const room = state.rooms.find(r=>r.id===roomId);
+  const rowEl = document.getElementById(`wr-${roomId}-${workId}`);
+  if (rowEl && room) {
+    // find cat and work
+    for (const [cat, works] of Object.entries(DEFAULT_WORKS)) {
+      const w = works.find(ww=>ww.id===workId);
+      if (w) { rowEl.replaceWith(buildWorkRow(room, cat, w)); break; }
+    }
+  }
+  recalcAll();
+}
+
+function setWorkOverride(roomId, cat, workId, type, val) {
+  if (!state.overrides[roomId]) state.overrides[roomId] = {};
+  if (!state.overrides[roomId][workId]) state.overrides[roomId][workId] = {};
+  state.overrides[roomId][workId][type] = val;
+  recalcAll();
+  // highlight input
+  const inp = document.querySelector(`#wr-${roomId}-${workId} .work-input:nth-of-type(${type==='mat'?1:2})`);
+  if (inp) inp.classList.add('override');
+}
+
+function resetWorkOverride(roomId, cat, workId) {
+  if (state.overrides[roomId] && state.overrides[roomId][workId]) {
+    delete state.overrides[roomId][workId].mat;
+    delete state.overrides[roomId][workId].lab;
+  }
+  const room = state.rooms.find(r=>r.id===roomId);
+  const rowEl = document.getElementById(`wr-${roomId}-${workId}`);
+  if (rowEl && room) {
+    for (const [cat, works] of Object.entries(DEFAULT_WORKS)) {
+      const w = works.find(ww=>ww.id===workId);
+      if (w) { rowEl.replaceWith(buildWorkRow(room, cat, w)); break; }
+    }
+  }
+  recalcAll();
+}
+
+// ============================================================
+//  CALC
+// ============================================================
+function recalcAll() {
+  let totalMat = 0, totalLab = 0;
+
+  for (const room of state.rooms) {
+    let roomMat = 0, roomLab = 0;
+    for (const [cat, works] of Object.entries(DEFAULT_WORKS)) {
+      for (const w of works) {
+        if (!isWorkEnabled(room.id, w.id)) continue;
+        const ov = getOverride(room.id, w.id);
+        const mat = (ov.mat !== undefined) ? ov.mat : getPrice(cat, w.id, 'mat');
+        const lab = (ov.lab !== undefined) ? ov.lab : getPrice(cat, w.id, 'lab');
+        const unit = w.unit;
+        let qty = room.sqm;
+        if (unit === 'გ.მ') qty = Math.round(Math.sqrt(room.sqm) * 4); // პერიმეტრი
+        if (unit === 'წ.')  qty = Math.max(1, Math.round(room.sqm / 8)); // სველ. წ-ის რ-ბა
+        if (unit === 'ც.')  qty = 1; // ერთი ერთეული
+        const rowMat = mat * qty;
+        const rowLab = lab * qty;
+        roomMat += rowMat;
+        roomLab += rowLab;
+        const wt = document.getElementById(`wt-${room.id}-${w.id}`);
+        if (wt) wt.textContent = fmt(rowMat + rowLab);
+      }
+    }
+    totalMat += roomMat;
+    totalLab += roomLab;
+    const rt = document.getElementById(`room-total-${room.id}`);
+    if (rt) rt.textContent = fmt(roomMat + roomLab);
+  }
+
+  recalcSummary(totalMat, totalLab);
+}
+
+function recalcSummary(totalMat, totalLab) {
+  // if called from avoji update without room recalc, re-derive from DOM
+  if (totalMat === undefined) {
+    // just update grand total using existing sum values
+    const matText = document.getElementById('sum-material').textContent.replace(/[^0-9]/g,'');
+    const labText = document.getElementById('sum-labor').textContent.replace(/[^0-9]/g,'');
+    totalMat = parseInt(matText)||0;
+    totalLab = parseInt(labText)||0;
+  } else {
+    document.getElementById('sum-material').textContent = fmt(totalMat);
+    document.getElementById('sum-labor').textContent = fmt(totalLab);
+  }
+  const avojiTotal = recalcAvojiTotal();
+  const remoBase = totalMat + totalLab;
+  const reserve = remoBase * (state.project.reserve / 100);
+  const grand = remoBase + reserve + avojiTotal;
+
+  document.getElementById('sum-reserve').textContent = fmt(reserve);
+  document.getElementById('sum-total').textContent = fmt(grand);
+}
+
+function fmt(n) { return Math.round(n).toLocaleString('ka-GE') + ' ₾'; }
+function fmtN(n) { return Math.round(n); }
+
+// ============================================================
+//  TEMPLATES
+// ============================================================
+function renderTemplates() {
+  const container = document.getElementById('tpl-container');
+  container.innerHTML = '';
+  for (const [cat, works] of Object.entries(DEFAULT_WORKS)) {
+    const card = document.createElement('div');
+    card.className = 'tpl-card';
+    card.innerHTML = `<h3>${CAT_LABELS[cat]}</h3>`;
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.className = 'tpl-row';
+    hdr.innerHTML = `<div class="tpl-col-h">სამუშაო</div>
+      <div class="tpl-col-h">მასალა ₾</div>
+      <div class="tpl-col-h">ხელობა ₾</div>`;
+    card.appendChild(hdr);
+
+    const q = state.project.quality;
+    for (const w of works) {
+      const row = document.createElement('div');
+      row.className = 'tpl-row';
+      const matKey = 'mat_'+q;
+      const labKey = 'lab_'+q;
+      const matVal = state.templates[cat][w.id][matKey];
+      const labVal = state.templates[cat][w.id][labKey];
+      row.innerHTML = `<div class="tpl-name">${w.name}<br><span style="font-size:10px;color:var(--text2)">${w.unit}</span></div>
+        <input class="tpl-inp" type="number" value="${matVal}" data-cat="${cat}" data-id="${w.id}" data-key="${matKey}" onchange="updateTpl(this)">
+        <input class="tpl-inp" type="number" value="${labVal}" data-cat="${cat}" data-id="${w.id}" data-key="${labKey}" onchange="updateTpl(this)">`;
+      card.appendChild(row);
+    }
+    container.appendChild(card);
+  }
+}
+
+function updateTpl(inp) {
+  const {cat, id, key} = inp.dataset;
+  state.templates[cat][id][key] = parseFloat(inp.value)||0;
+  recalcAll();
+}
+
+function saveTemplates() {
+  localStorage.setItem('remonti_templates', JSON.stringify(state.templates));
+  localStorage.setItem('remonti_tpl_version', TEMPLATE_VERSION);
+  renderRooms();
+  recalcAll();
+  showToast('სამუშაო ნორმები შენახულია ✓');
+}
+
+// ============================================================
+//  ARCHIVE
+// ============================================================
+function saveProject() {
+  syncFromDOM_project();
+  const archives = JSON.parse(localStorage.getItem('remonti_archive') || '[]');
+  const snap = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('ka-GE'),
+    project: {...state.project},
+    rooms: JSON.parse(JSON.stringify(state.rooms)),
+    overrides: JSON.parse(JSON.stringify(state.overrides)),
+    templates: JSON.parse(JSON.stringify(state.templates)),
+    avoji: JSON.parse(JSON.stringify(state.avoji||[])),
+  };
+  snap.grandTotal = calcGrand(snap);
+  archives.unshift(snap);
+  localStorage.setItem('remonti_archive', JSON.stringify(archives));
+  renderArchive();
+  showToast('პროექტი შენახულია ✓');
+}
+
+function calcGrand(snap) {
+  let total = 0;
+  for (const room of snap.rooms) {
+    for (const [cat, works] of Object.entries(DEFAULT_WORKS)) {
+      for (const w of works) {
+        const disabled = KARKASI_DISABLED[snap.project.karkasi].includes(w.id);
+        const ov = (snap.overrides[room.id] && snap.overrides[room.id][w.id]) || {};
+        const enabled = ov.enabled !== undefined ? ov.enabled : !disabled;
+        if (!enabled) continue;
+        const q = snap.project.quality;
+        const mat = (ov.mat !== undefined) ? ov.mat : (snap.templates[cat][w.id]['mat_'+q]||0);
+        const lab = (ov.lab !== undefined) ? ov.lab : (snap.templates[cat][w.id]['lab_'+q]||0);
+        let qty = room.sqm;
+        if (w.unit === 'გ.მ') qty = Math.round(Math.sqrt(room.sqm)*4);
+        if (w.unit === 'წ.')  qty = Math.max(1, Math.round(room.sqm/8));
+        if (w.unit === 'ც.')  qty = 1;
+        total += (mat+lab)*qty;
+      }
+    }
+  }
+  const avojiTotal = (snap.avoji||[]).reduce((s,a)=>s+(a.price||0),0);
+  return total * (1 + snap.project.reserve/100) + avojiTotal;
+}
+
+function renderArchive() {
+  const archives = JSON.parse(localStorage.getItem('remonti_archive') || '[]');
+  const list = document.getElementById('archive-list');
+  if (!archives.length) {
+    list.innerHTML = `<div class="empty-state"><div class="e-icon">📁</div><p>შენახული პროექტი არ არის</p></div>`;
+    return;
+  }
+  list.innerHTML = '';
+  for (const snap of archives) {
+    const card = document.createElement('div');
+    card.className = 'arch-card';
+    const typeLabel = {bina:'ბინა',saxli:'სახლი',ofisi:'ოფისი'}[snap.project.type]||'';
+    const karLabel = {shavi:'შავი',tetri:'თეთრი',mwvane:'მწვანე'}[snap.project.karkasi]||'';
+    card.innerHTML = `
+      <div class="arch-info">
+        <h4>${snap.project.name}</h4>
+        <p>${typeLabel} · ${karLabel} კარკასი · ${snap.project.sqm} კვ.მ · ${snap.date}</p>
+      </div>
+      <div class="arch-total">${fmt(snap.grandTotal)}</div>
+      <div class="arch-actions">
+        <button class="btn btn-sm btn-outline" onclick="loadArchiveProject(${snap.id})">📂 გახსნა</button>
+        <button class="btn btn-sm btn-red" onclick="deleteArchive(${snap.id})">🗑️</button>
+      </div>`;
+    list.appendChild(card);
+  }
+}
+
+function loadArchiveProject(id) {
+  const archives = JSON.parse(localStorage.getItem('remonti_archive') || '[]');
+  const snap = archives.find(a=>a.id===id);
+  if (!snap) return;
+  state.project = {...snap.project};
+  state.rooms = JSON.parse(JSON.stringify(snap.rooms));
+  state.overrides = JSON.parse(JSON.stringify(snap.overrides));
+  state.templates = JSON.parse(JSON.stringify(snap.templates));
+  state.avoji = JSON.parse(JSON.stringify(snap.avoji||DEFAULT_AVOJI.map(a=>({...a}))));
+  // Update DOM
+  document.getElementById('proj-name').value = state.project.name;
+  document.getElementById('proj-type').value = state.project.type;
+  document.getElementById('proj-karkasi').value = state.project.karkasi;
+  document.getElementById('proj-sqm').value = state.project.sqm;
+  document.getElementById('proj-quality').value = state.project.quality;
+  document.getElementById('proj-reserve').value = state.project.reserve;
+  renderRooms();
+  renderAvoji();
+  renderTemplates();
+  recalcAll();
+  showPage('dashboard');
+  showToast('პროექტი ჩატვირთულია ✓');
+}
+
+function deleteArchive(id) {
+  let archives = JSON.parse(localStorage.getItem('remonti_archive') || '[]');
+  archives = archives.filter(a=>a.id!==id);
+  localStorage.setItem('remonti_archive', JSON.stringify(archives));
+  renderArchive();
+  showToast('წაიშალა');
+}
+
+// ============================================================
+//  NEW PROJECT
+// ============================================================
+function newProject() { document.getElementById('modal-new').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function confirmNewProject() {
+  const name = document.getElementById('new-proj-name').value.trim() || 'ახალი პროექტი';
+  state.project = {name, type:'bina', karkasi:'shavi', sqm:50, quality:'standard', reserve:15};
+  state.rooms = DEFAULT_ROOMS.map(r=>({...r}));
+  state.overrides = {};
+  state.avoji = DEFAULT_AVOJI.map(a=>({...a}));
+  document.getElementById('proj-name').value = name;
+  document.getElementById('proj-type').value = 'bina';
+  document.getElementById('proj-karkasi').value = 'shavi';
+  document.getElementById('proj-sqm').value = 50;
+  document.getElementById('proj-quality').value = 'standard';
+  document.getElementById('proj-reserve').value = 15;
+  renderRooms();
+  renderAvoji();
+  recalcAll();
+  closeModal('modal-new');
+  showToast('ახალი პროექტი შეიქმნა ✓');
+}
+
+// ============================================================
+//  EXPORT PDF
+// ============================================================
+function exportPDF() {
+  syncFromDOM_project();
+  const w = window.open('','_blank');
+  const q = state.project.quality;
+  const qLabel = {economy:'ეკონომი',standard:'სტანდარტი',premium:'პრემიუმი'}[q];
+  const karLabel = {shavi:'შავი',tetri:'თეთრი',mwvane:'მწვანე'}[state.project.karkasi];
+
+  let rows = '';
+  let totalMat=0, totalLab=0;
+  for (const room of state.rooms) {
+    rows += `<tr style="background:#e8f0ff"><td colspan="5"><strong>${room.icon} ${room.name} (${room.sqm} კვ.მ)</strong></td></tr>`;
+    for (const [cat, works] of Object.entries(DEFAULT_WORKS)) {
+      rows += `<tr style="background:#f5f5f5"><td colspan="5" style="font-size:12px;color:#555;padding-left:16px">${CAT_LABELS[cat]}</td></tr>`;
+      for (const w2 of works) {
+        if (!isWorkEnabled(room.id, w2.id)) continue;
+        const ov = getOverride(room.id, w2.id);
+        const mat = (ov.mat !== undefined) ? ov.mat : getPrice(cat, w2.id, 'mat');
+        const lab = (ov.lab !== undefined) ? ov.lab : getPrice(cat, w2.id, 'lab');
+        let qty = room.sqm;
+        if (w2.unit === 'გ.მ') qty = Math.round(Math.sqrt(room.sqm)*4);
+        if (w2.unit === 'წ.')  qty = 1;
+        const mT = mat*qty, lT = lab*qty;
+        totalMat+=mT; totalLab+=lT;
+        rows += `<tr>
+          <td style="padding-left:24px">${w2.name}</td>
+          <td>${qty} ${w2.unit}</td>
+          <td>${fmtN(mat)} ₾</td>
+          <td>${fmtN(lab)} ₾</td>
+          <td><strong>${fmtN(mT+lT)} ₾</strong></td>
+        </tr>`;
+      }
+    }
+  }
+  const reserve = (totalMat+totalLab)*(state.project.reserve/100);
+  const avojiTotal = (state.avoji||[]).reduce((s,a)=>s+(a.price||0),0);
+  const avojiRows = (state.avoji||[]).filter(a=>a.price>0).map(a=>
+    `<tr><td style="padding-left:24px">${a.name}</td><td>—</td><td>—</td><td>—</td><td><strong>${fmtN(a.price)} ₾</strong></td></tr>`
+  ).join('');
+  const grand = totalMat+totalLab+reserve+avojiTotal;
+
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>სარემონტო ხარჯთაღრიცხვა</title>
+    <style>
+      body{font-family:Arial,sans-serif;font-size:13px;color:#222;padding:24px}
+      h1{color:#E8622A;margin-bottom:4px}
+      .meta{color:#555;margin-bottom:20px;font-size:12px}
+      table{width:100%;border-collapse:collapse;margin-bottom:20px}
+      th{background:#E8622A;color:#fff;padding:8px;text-align:left}
+      td{padding:6px 8px;border-bottom:1px solid #eee}
+      .sum-row{background:#1A1F2E;color:#fff;font-weight:bold}
+      .sum-row td{padding:10px 8px}
+      .avoji-hdr{background:#2D4A3E;color:#fff}
+      @media print{button{display:none}}
+    </style></head><body>
+    <h1>🏗️ სარემონტო ხარჯთაღრიცხვა</h1>
+    <div class="meta">
+      პროექტი: <strong>${state.project.name}</strong> &nbsp;|&nbsp;
+      ტიპი: ${state.project.type} &nbsp;|&nbsp; კარკასი: ${karLabel} &nbsp;|&nbsp;
+      ხარისხი: ${qLabel} &nbsp;|&nbsp; ფართი: ${state.project.sqm} კვ.მ &nbsp;|&nbsp;
+      თარიღი: ${new Date().toLocaleDateString('ka-GE')}
+    </div>
+    <table>
+      <thead><tr><th>სამუშაო</th><th>რაოდენობა</th><th>მასალა/ერთ.</th><th>ხელობა/ერთ.</th><th>ჯამი</th></tr></thead>
+      <tbody>${rows}
+        <tr class="sum-row"><td colspan="4">🔧 მასალა სულ</td><td>${fmtN(totalMat)} ₾</td></tr>
+        <tr class="sum-row"><td colspan="4">👷 ხელობა სულ</td><td>${fmtN(totalLab)} ₾</td></tr>
+        <tr class="sum-row"><td colspan="4">📦 სარეზერვო (${state.project.reserve}%)</td><td>${fmtN(reserve)} ₾</td></tr>
+        ${avojiRows ? `<tr class="avoji-hdr"><td colspan="5">🛋️ ავეჯი და ინტერიერი</td></tr>${avojiRows}<tr class="sum-row"><td colspan="4">🛋️ ავეჯი სულ</td><td>${fmtN(avojiTotal)} ₾</td></tr>` : ''}
+        <tr class="sum-row" style="font-size:16px"><td colspan="4">✅ ჯამი სულ</td><td>${fmtN(grand)} ₾</td></tr>
+      </tbody>
+    </table>
+    <button onclick="window.print()">🖨️ ბეჭდვა / PDF შენახვა</button>
+  </body></html>`);
+  w.document.close();
+}
+
+// ============================================================
+//  EXPORT EXCEL
+// ============================================================
+function exportExcel() {
+  syncFromDOM_project();
+  const q = state.project.quality;
+  const karLabel = {shavi:'შავი',tetri:'თეთრი',mwvane:'მწვანე'}[state.project.karkasi];
+  const qLabel = {economy:'ეკონომი',standard:'სტანდარტი',premium:'პრემიუმი'}[q];
+
+  const wb = XLSX.utils.book_new();
+  const wsData = [];
+  wsData.push([`სარემონტო ხარჯთაღრიცხვა — ${state.project.name}`]);
+  wsData.push([`კარკასი: ${karLabel}  |  ხარისხი: ${qLabel}  |  ფართი: ${state.project.sqm} კვ.მ`]);
+  wsData.push([]);
+  wsData.push(['ოთახი','კატეგორია','სამუშაო','ერთ.','რაოდ.','მასალა/ერთ','ხელობა/ერთ','ჯამი']);
+
+  let totalMat=0, totalLab=0;
+  for (const room of state.rooms) {
+    for (const [cat, works] of Object.entries(DEFAULT_WORKS)) {
+      for (const w2 of works) {
+        if (!isWorkEnabled(room.id, w2.id)) continue;
+        const ov = getOverride(room.id, w2.id);
+        const mat = (ov.mat !== undefined) ? ov.mat : getPrice(cat, w2.id, 'mat');
+        const lab = (ov.lab !== undefined) ? ov.lab : getPrice(cat, w2.id, 'lab');
+        let qty = room.sqm;
+        if (w2.unit === 'გ.მ') qty = Math.round(Math.sqrt(room.sqm)*4);
+        if (w2.unit === 'წ.')  qty = 1;
+        totalMat+=mat*qty; totalLab+=lab*qty;
+        wsData.push([room.name, CAT_LABELS[cat], w2.name, w2.unit, qty, mat, lab, mat*qty+lab*qty]);
+      }
+    }
+  }
+  const reserve = (totalMat+totalLab)*(state.project.reserve/100);
+  const avojiTotal = (state.avoji||[]).reduce((s,a)=>s+(a.price||0),0);
+  wsData.push([]);
+  wsData.push(['','','','','','მასალა სულ','',totalMat]);
+  wsData.push(['','','','','','ხელობა სულ','',totalLab]);
+  wsData.push(['','','','','',`სარეზერვო (${state.project.reserve}%)`, '',reserve]);
+  if (avojiTotal > 0) {
+    wsData.push([]);
+    wsData.push(['🛋️ ავეჯი და ინტერიერი']);
+    for (const av of (state.avoji||[])) {
+      if (av.price > 0) wsData.push(['', av.name, '', '', '', '', '', av.price]);
+    }
+    wsData.push(['','','','','','ავეჯი სულ','',avojiTotal]);
+  }
+  wsData.push([]);
+  wsData.push(['','','','','','ჯამი სულ','',totalMat+totalLab+reserve+avojiTotal]);
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  XLSX.utils.book_append_sheet(wb, ws, 'ხარჯთაღრიცხვა');
+  XLSX.writeFile(wb, `remonti_${state.project.name}.xlsx`);
+  showToast('Excel გადმოწერილია ✓');
+}
+
+// ============================================================
+//  UI HELPERS
+// ============================================================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const map = {dashboard:0,templates:1,archive:2};
+  document.querySelectorAll('.tab-btn')[map[id]].classList.add('active');
+  if (id==='templates') { syncFromDOM_project(); renderTemplates(); }
+  if (id==='archive') renderArchive();
+}
+
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${isError?'error':''} show`;
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ============================================================
+//  BOOT
+// ============================================================
+init();
+
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
