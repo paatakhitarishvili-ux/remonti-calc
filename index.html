@@ -165,7 +165,7 @@
   .avoji-sum { font-size:13px; font-weight:600; color:var(--text); text-align:right; }
 
   @media(max-width:600px) {
-    /* NAV — ხატულები მხოლოდ */
+    /* NAV */
     .nav { padding:0 10px; gap:2px; height:50px; }
     .nav-logo { font-size:14px; margin-right:8px; }
     .nav-logo span { font-size:18px; }
@@ -187,13 +187,15 @@
     .summary-bar { grid-template-columns:1fr 1fr; gap:8px; }
     .summary-card .s-val { font-size:16px; }
 
-    /* ROOM BLOCK */
+    /* ROOM TITLE BAR */
     .room-title-bar { flex-direction:column; align-items:flex-start; gap:8px; padding:10px 12px; }
     .room-title-left { width:100%; }
     .room-name-input { width:calc(100% - 30px); font-size:13px; }
+    .room-cats { padding:10px 12px; }
 
-    /* WORK ROWS — მობილურზე სვეტები ვერტიკალურად */
+    /* WORK ROW — მობილური */
     .col-header { display:none; }
+
     .work-row {
       display:grid;
       grid-template-columns:28px 1fr 28px;
@@ -202,26 +204,25 @@
       padding:8px 0;
       border-bottom:1px solid #ffffff10;
     }
-    .work-toggle { grid-row:1; grid-column:1; align-self:start; margin-top:2px; }
-    .work-name { grid-row:1; grid-column:2; font-size:12px; }
-    .edit-btn { grid-row:1; grid-column:3; align-self:start; }
-    /* inputs row */
+    .work-toggle  { grid-row:1; grid-column:1; align-self:center; }
+    .work-name    { grid-row:1; grid-column:2; font-size:12px; line-height:1.3; }
+    .edit-btn     { grid-row:1; grid-column:3; align-self:center; }
+
+    /* inputs: მასალა | ხელობა | ჯამი — სამივე ერთ სტრიქონზე, სწორი წონებით */
     .work-inputs-mobile {
-      grid-row:2; grid-column:2;
+      grid-row:2;
+      grid-column:2 / span 2;
       display:grid;
-      grid-template-columns:1fr 1fr 80px;
-      gap:4px;
+      grid-template-columns:1fr 1fr auto;
+      gap:5px;
       align-items:center;
     }
-    .work-input { font-size:11px; padding:4px 5px; }
-    .work-total { grid-row:2; grid-column:2; text-align:right; font-size:12px; }
-
-    /* ROOM CATS */
-    .room-cats { padding:10px 12px; }
+    .work-input  { font-size:11px; padding:4px 6px; width:100%; }
+    .work-total  { font-size:12px; font-weight:700; white-space:nowrap; padding-left:4px; }
 
     /* TPL GRID */
     .tpl-grid { grid-template-columns:1fr; }
-    .tpl-row { grid-template-columns:1fr 80px 80px; gap:6px; }
+    .tpl-row { grid-template-columns:1fr 75px 75px; gap:5px; }
 
     /* ARCHIVE */
     .arch-card { flex-direction:column; align-items:flex-start; }
@@ -233,8 +234,6 @@
 
     /* MODAL */
     .modal { width:95vw; padding:20px; }
-
-    /* rooms header */
     .rooms-header { flex-wrap:wrap; gap:8px; }
   }
 </style>
